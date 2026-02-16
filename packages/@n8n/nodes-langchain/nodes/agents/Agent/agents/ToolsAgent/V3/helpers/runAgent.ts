@@ -61,12 +61,10 @@ export async function runAgent(
 	const executeOptions = { signal: ctx.getExecutionCancelSignal() };
 	const additionalMetadata = buildTracingMetadata(options.tracingMetadata?.values);
 	if (Object.keys(additionalMetadata).length > 0 && 'logger' in ctx) {
-		ctx.logger.debug(`Tracing metadata: ${JSON.stringify(additionalMetadata)}`);
+		ctx.logger.debug('Tracing metadata', { additionalMetadata });
 	}
 	const tracingConfig = isExecuteFunctions(ctx)
-		? Object.keys(additionalMetadata).length > 0
-			? getTracingConfig(ctx, { additionalMetadata })
-			: getTracingConfig(ctx)
+		? getTracingConfig(ctx, { additionalMetadata })
 		: undefined;
 	const executorWithTracing = tracingConfig ? executor.withConfig(tracingConfig) : executor;
 

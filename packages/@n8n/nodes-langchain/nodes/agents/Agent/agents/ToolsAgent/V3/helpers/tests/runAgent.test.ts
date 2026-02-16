@@ -308,7 +308,9 @@ describe('runAgent - tracing configuration', () => {
 
 		await runAgent(mockContext, mockExecutor, itemContext, mockModel, undefined);
 
-		expect(tracing.getTracingConfig).toHaveBeenCalledWith(mockContext);
+		expect(tracing.getTracingConfig).toHaveBeenCalledWith(mockContext, {
+			additionalMetadata: {},
+		});
 		expect(mockWithConfig).toHaveBeenCalledWith(mockTracingConfig);
 		expect(mockInvoke).toHaveBeenCalled();
 	});
@@ -406,7 +408,9 @@ describe('runAgent - tracing configuration', () => {
 
 		await runAgent(streamingContext, mockExecutor, itemContext, mockModel, undefined);
 
-		expect(tracing.getTracingConfig).toHaveBeenCalledWith(streamingContext);
+		expect(tracing.getTracingConfig).toHaveBeenCalledWith(streamingContext, {
+			additionalMetadata: {},
+		});
 		expect(mockWithConfig).toHaveBeenCalledWith(mockTracingConfig);
 		expect(mockStreamEvents).toHaveBeenCalled();
 	});

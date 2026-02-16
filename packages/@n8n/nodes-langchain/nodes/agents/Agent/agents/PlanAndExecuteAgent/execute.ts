@@ -32,16 +32,13 @@ export async function planAndExecuteAgentExecute(
 
 	const options = this.getNodeParameter('options', 0, {}) as {
 		humanMessageTemplate?: string;
-		tracingMetadata?: { values?: Array<{ key: string; value: string }> };
+		tracingMetadata?: { values?: Array<{ key: string; value: unknown }> };
 	};
 	const additionalMetadata = buildTracingMetadata(options.tracingMetadata?.values);
 	if (Object.keys(additionalMetadata).length > 0) {
-		this.logger.debug(`Tracing metadata: ${JSON.stringify(additionalMetadata)}`);
+		this.logger.debug('Tracing metadata', { additionalMetadata });
 	}
-	const tracingConfig =
-		Object.keys(additionalMetadata).length > 0
-			? getTracingConfig(this, { additionalMetadata })
-			: getTracingConfig(this);
+	const tracingConfig = getTracingConfig(this, { additionalMetadata });
 
 	const agentExecutor = await PlanAndExecuteAgentExecutor.fromLLMAndTools({
 		llm: model,

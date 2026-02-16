@@ -262,7 +262,7 @@ export async function toolsAgentExecute(
 				maxIterations?: number;
 				returnIntermediateSteps?: boolean;
 				passthroughBinaryImages?: boolean;
-				tracingMetadata?: { values?: Array<{ key: string; value: string }> };
+				tracingMetadata?: { values?: Array<{ key: string; value: unknown }> };
 			};
 
 			// Prepare the prompt messages and prompt template.
@@ -285,12 +285,10 @@ export async function toolsAgentExecute(
 			);
 			const additionalMetadata = buildTracingMetadata(options.tracingMetadata?.values);
 			if (Object.keys(additionalMetadata).length > 0) {
-				this.logger.debug(`Tracing metadata: ${JSON.stringify(additionalMetadata)}`);
+				this.logger.debug('Tracing metadata', { additionalMetadata });
 			}
 			const tracingConfig = isExecuteFunctions(this)
-				? Object.keys(additionalMetadata).length > 0
-					? getTracingConfig(this, { additionalMetadata })
-					: getTracingConfig(this)
+				? getTracingConfig(this, { additionalMetadata })
 				: undefined;
 			const executorWithTracing = tracingConfig ? executor.withConfig(tracingConfig) : executor;
 			// Invoke with fallback logic

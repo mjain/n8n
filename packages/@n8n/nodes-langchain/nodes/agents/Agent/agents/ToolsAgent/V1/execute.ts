@@ -60,7 +60,7 @@ export async function toolsAgentExecute(this: IExecuteFunctions): Promise<INodeE
 				maxIterations?: number;
 				returnIntermediateSteps?: boolean;
 				passthroughBinaryImages?: boolean;
-				tracingMetadata?: { values?: Array<{ key: string; value: string }> };
+				tracingMetadata?: { values?: Array<{ key: string; value: unknown }> };
 			};
 
 			// Prepare the prompt messages and prompt template.
@@ -94,12 +94,11 @@ export async function toolsAgentExecute(this: IExecuteFunctions): Promise<INodeE
 			});
 			const additionalMetadata = buildTracingMetadata(options.tracingMetadata?.values);
 			if (Object.keys(additionalMetadata).length > 0) {
-				this.logger.debug(`Tracing metadata: ${JSON.stringify(additionalMetadata)}`);
+				this.logger.debug('Tracing metadata', { additionalMetadata });
 			}
-			const executorWithTracing =
-				Object.keys(additionalMetadata).length > 0
-					? executor.withConfig(getTracingConfig(this, { additionalMetadata }))
-					: executor.withConfig(getTracingConfig(this));
+			const executorWithTracing = executor.withConfig(
+				getTracingConfig(this, { additionalMetadata }),
+			);
 
 			// Invoke the executor with the given input and system message.
 			const response = await executorWithTracing.invoke(
