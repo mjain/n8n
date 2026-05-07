@@ -65,6 +65,7 @@ export { DeleteProjectDto } from './project/delete-project.dto';
 export { AddUsersToProjectDto } from './project/add-users-to-project.dto';
 export { ChangeUserRoleInProject } from './project/change-user-role-in-project.dto';
 export { ListProjectsQueryDto } from './project/list-projects-query.dto';
+export { UpdateProjectSettingsDto } from './project/update-project-settings.dto';
 
 export { SamlAcsDto } from './saml/saml-acs.dto';
 export { SamlPreferences } from './saml/saml-preferences.dto';

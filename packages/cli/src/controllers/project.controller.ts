@@ -2,6 +2,7 @@ import {
 	CreateProjectDto,
 	DeleteProjectDto,
 	UpdateProjectDto,
+	UpdateProjectSettingsDto,
 	AddUsersToProjectDto,
 	ChangeUserRoleInProject,
 	ListProjectsQueryDto,
@@ -9,6 +10,7 @@ import {
 import { AuthenticatedRequest, ProjectRepository } from '@n8n/db';
 import {
 	Get,
+	Put,
 	Post,
 	GlobalScope,
 	RestController,
@@ -261,6 +263,27 @@ export class ProjectController {
 		@Param('projectId') projectId: string,
 	) {
 		await this.projectsService.updateProject(projectId, payload);
+	}
+
+	@Get('/:projectId/settings')
+	@ProjectScope('project:read')
+	async getProjectSettings(
+		_req: AuthenticatedRequest,
+		_res: Response,
+		@Param('projectId') projectId: string,
+	) {
+		return await this.projectsService.getProjectSettings(projectId);
+	}
+
+	@Put('/:projectId/settings')
+	@ProjectScope('project:update')
+	async updateProjectSettings(
+		_req: AuthenticatedRequest,
+		_res: Response,
+		@Body payload: UpdateProjectSettingsDto,
+		@Param('projectId') projectId: string,
+	) {
+		await this.projectsService.updateProjectSettings(projectId, payload);
 	}
 
 	@Post('/:projectId/users')

@@ -147,6 +147,7 @@ export class JobProcessor {
 
 		const additionalData = await WorkflowExecuteAdditionalData.getBase({
 			workflowId,
+			projectId: job.data.projectId,
 			executionTimeoutTimestamp,
 			workflowSettings: execution.workflowData.settings,
 		});

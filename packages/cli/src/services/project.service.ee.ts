@@ -1,9 +1,15 @@
-import type { CreateProjectDto, ProjectType, UpdateProjectDto } from '@n8n/api-types';
+import type {
+	CreateProjectDto,
+	ProjectType,
+	UpdateProjectDto,
+	UpdateProjectSettingsDto,
+} from '@n8n/api-types';
 import { LicenseState, ModuleRegistry } from '@n8n/backend-common';
 import { UNLIMITED_LICENSE_QUOTA } from '@n8n/constants';
 import {
 	type User,
 	Project,
+	type ProjectSettings,
 	ProjectRelation,
 	ProjectRelationRepository,
 	ProjectRepository,
@@ -339,6 +345,32 @@ export class ProjectService {
 		if (!result.affected) {
 			throw new ProjectNotFoundError(projectId);
 		}
+	}
+
+	async getProjectSettings(projectId: string): Promise<ProjectSettings> {
+		const project = await this.projectRepository.findOneBy({ id: projectId });
+		if (!project) {
+			throw new ProjectNotFoundError(projectId);
+		}
+		return project.settings ?? {};
+	}
+
+	async updateProjectSettings(
+		projectId: string,
+		settings: UpdateProjectSettingsDto,
+	): Promise<void> {
+		const project = await this.projectRepository.findOneBy({ id: projectId });
+		if (!project) {
+			throw new ProjectNotFoundError(projectId);
+		}
+
+		const updatedSettings: ProjectSettings = {
+			...(project.settings ?? {}),
+			langsmithCredentialId: settings.langsmithCredentialId ?? undefined,
+			langsmithProject: settings.langsmithProject ?? undefined,
+		};
+
+		await this.projectRepository.update({ id: projectId }, { settings: updatedSettings });
 	}
 
 	async getPersonalProject(user: User): Promise<Project | null> {

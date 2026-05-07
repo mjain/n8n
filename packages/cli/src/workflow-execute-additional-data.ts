@@ -5,7 +5,7 @@
 import type { PushMessage, PushType } from '@n8n/api-types';
 import { Logger, ModuleRegistry } from '@n8n/backend-common';
 import { GlobalConfig, SsrfProtectionConfig } from '@n8n/config';
-import { ExecutionRepository, WorkflowRepository } from '@n8n/db';
+import { ExecutionRepository, SharedWorkflowRepository, WorkflowRepository } from '@n8n/db';
 import { Container } from '@n8n/di';
 import type { ServiceIdentifier } from '@n8n/di';
 import { ExternalSecretsProxy, WorkflowExecute } from 'n8n-core';
@@ -447,6 +447,13 @@ export function sendDataToUI(
 	}
 }
 
+async function getProjectLangsmithSettings(workflowId: string | undefined) {
+	if (!workflowId) return undefined;
+	const project =
+		await Container.get(SharedWorkflowRepository).getWorkflowOwningProject(workflowId);
+	return project?.settings ?? undefined;
+}
+
 /**
  * Returns the base additional data without webhooks
  * @returns {IWorkflowExecuteAdditionalData}
@@ -558,30 +565,39 @@ export async function getBase({
 		additionalData.ssrfBridge = Container.get(SsrfProtectionService);
 	}
 
-	if (workflowSettings?.langsmithCredentialId) {
+	// Resolve LangSmith tracing config: workflow settings override project settings
+	const projectSettings =
+		!workflowSettings?.langsmithCredentialId && !workflowSettings?.langsmithProject
+			? await getProjectLangsmithSettings(workflowId)
+			: undefined;
+	const langsmithCredentialId =
+		workflowSettings?.langsmithCredentialId ?? projectSettings?.langsmithCredentialId;
+	const langsmithProject = workflowSettings?.langsmithProject ?? projectSettings?.langsmithProject;
+
+	if (langsmithCredentialId) {
 		try {
 			const credentialData = await additionalData.credentialsHelper.getDecrypted(
 				additionalData,
-				{ id: workflowSettings.langsmithCredentialId, name: '' },
+				{ id: langsmithCredentialId, name: '' },
 				'langSmithApi',
 				'internal',
 			);
 			additionalData.langsmithConfig = {
 				apiKey: credentialData.apiKey as string,
-				project: workflowSettings.langsmithProject,
+				project: langsmithProject,
 			};
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
 			Container.get(Logger).warn('Failed to load LangSmith credential', {
-				credentialId: workflowSettings.langsmithCredentialId,
+				credentialId: langsmithCredentialId,
 				error: errorMessage,
 			});
 			additionalData.langsmithConfigError = errorMessage;
 		}
-	} else if (workflowSettings?.langsmithProject) {
+	} else if (langsmithProject) {
 		additionalData.langsmithConfig = {
 			apiKey: '',
-			project: workflowSettings.langsmithProject,
+			project: langsmithProject,
 		};
 	}
 

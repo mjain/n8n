@@ -17,6 +17,11 @@ import type { SharedWorkflow } from './shared-workflow';
 import { User } from './user';
 import type { Variables } from './variables';
 
+export interface ProjectSettings {
+	langsmithCredentialId?: string;
+	langsmithProject?: string;
+}
+
 @Entity()
 export class Project extends WithTimestampsAndStringId {
 	@Column({ length: 255 })
@@ -30,6 +35,9 @@ export class Project extends WithTimestampsAndStringId {
 
 	@Column({ type: 'varchar', length: 512, nullable: true })
 	description: string | null;
+
+	@Column({ type: 'json', nullable: true })
+	settings: ProjectSettings | null;
 
 	@OneToMany('ProjectRelation', 'project')
 	projectRelations: ProjectRelation[];

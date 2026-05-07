@@ -1,7 +1,7 @@
 import type { IRestApiContext } from '@n8n/rest-api-client';
 import { getFullApiResponse, makeRestApiRequest } from '@n8n/rest-api-client';
-import type { Project, ProjectListItem, ProjectsCount } from './projects.types';
-import type { CreateProjectDto, UpdateProjectDto } from '@n8n/api-types';
+import type { Project, ProjectListItem, ProjectsCount, ProjectSettings } from './projects.types';
+import type { CreateProjectDto, UpdateProjectDto, UpdateProjectSettingsDto } from '@n8n/api-types';
 import type { AssignableProjectRole } from '@n8n/permissions';
 
 export const getAllProjects = async (context: IRestApiContext): Promise<ProjectListItem[]> => {
@@ -109,4 +109,19 @@ export const deleteProjectMember = async (
 	userId: string,
 ): Promise<void> => {
 	await makeRestApiRequest(context, 'DELETE', `/projects/${projectId}/users/${userId}`);
+};
+
+export const getProjectSettings = async (
+	context: IRestApiContext,
+	projectId: string,
+): Promise<ProjectSettings> => {
+	return await makeRestApiRequest(context, 'GET', `/projects/${projectId}/settings`);
+};
+
+export const updateProjectSettings = async (
+	context: IRestApiContext,
+	projectId: string,
+	payload: UpdateProjectSettingsDto,
+): Promise<void> => {
+	await makeRestApiRequest(context, 'PUT', `/projects/${projectId}/settings`, payload);
 };

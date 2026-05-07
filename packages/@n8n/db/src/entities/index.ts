@@ -21,6 +21,7 @@ import { FolderTagMapping } from './folder-tag-mapping';
 import { InvalidAuthToken } from './invalid-auth-token';
 import { ProcessedData } from './processed-data';
 import { Project } from './project';
+import type { ProjectSettings } from './project';
 import { ProjectRelation } from './project-relation';
 import { ProjectSecretsProviderAccess } from './project-secrets-provider-access';
 import type { SecretsProviderAccessRole } from './project-secrets-provider-access';
@@ -64,6 +65,7 @@ export {
 	DeploymentKey,
 	Folder,
 	Project,
+	type ProjectSettings,
 	ProjectRelation,
 	RoleMappingRule,
 	Role,

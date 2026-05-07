@@ -187,6 +187,17 @@ export const useProjectsStore = defineStore(STORES.PROJECTS, () => {
 		}
 	};
 
+	const getProjectSettings = async (projectId: string) => {
+		return await projectsApi.getProjectSettings(rootStore.restApiContext, projectId);
+	};
+
+	const updateProjectSettings = async (
+		projectId: string,
+		settings: { langsmithCredentialId?: string | null; langsmithProject?: string | null },
+	) => {
+		await projectsApi.updateProjectSettings(rootStore.restApiContext, projectId, settings);
+	};
+
 	const addMember = async (
 		projectId: string,
 		{ userId, role }: { userId: string; role: string },
@@ -380,5 +391,7 @@ export const useProjectsStore = defineStore(STORES.PROJECTS, () => {
 		moveResourceToProject,
 		getResourceCounts,
 		getProjectSecretProviders,
+		getProjectSettings,
+		updateProjectSettings,
 	};
 });

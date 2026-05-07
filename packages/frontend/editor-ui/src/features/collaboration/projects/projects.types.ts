@@ -38,3 +38,7 @@ export type ProjectListItem = ProjectSharingData & {
 	scopes?: Scope[];
 };
 export type ProjectsCount = Record<ProjectType, number>;
+export interface ProjectSettings {
+	langsmithCredentialId?: string;
+	langsmithProject?: string;
+}

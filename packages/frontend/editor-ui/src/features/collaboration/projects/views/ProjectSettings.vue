@@ -6,6 +6,7 @@ import { deepCopy } from 'n8n-workflow';
 import { useDebounceFn } from '@vueuse/core';
 import { useUsersStore } from '@/features/settings/users/users.store';
 import { useI18n } from '@n8n/i18n';
+import { useCredentialsStore } from '@/features/credentials/credentials.store';
 import { type ResourceCounts, useProjectsStore } from '../projects.store';
 import type { Project, ProjectRelation, ProjectMemberData } from '../projects.types';
 import { useToast } from '@/app/composables/useToast';
@@ -34,6 +35,8 @@ import {
 	N8nIcon,
 	N8nIconPicker,
 	N8nInput,
+	N8nOption,
+	N8nSelect,
 	N8nText,
 	N8nUserSelect,
 } from '@n8n/design-system';
@@ -47,6 +50,7 @@ type FormDataDiff = {
 
 const usersStore = useUsersStore();
 const i18n = useI18n();
+const credentialsStore = useCredentialsStore();
 const projectsStore = useProjectsStore();
 const rolesStore = useRolesStore();
 const cloudPlanStore = useCloudPlanStore();
@@ -74,6 +78,27 @@ const resourceCounts = ref<ResourceCounts>({
 	dataTables: -1,
 	workflows: -1,
 });
+
+const langsmithCredentialId = ref<string | undefined>(undefined);
+const langsmithProject = ref<string | undefined>(undefined);
+const langsmithCredentials = computed(() => credentialsStore.getCredentialsByType('langSmithApi'));
+
+const onSaveLangsmithSettings = async () => {
+	if (!projectsStore.currentProject) return;
+	try {
+		await projectsStore.updateProjectSettings(projectsStore.currentProject.id, {
+			langsmithCredentialId: langsmithCredentialId.value ?? null,
+			langsmithProject: langsmithProject.value ?? null,
+		});
+		toast.showMessage({
+			type: 'success',
+			title: i18n.baseText('projects.settings.langsmith.saved'),
+		});
+	} catch (error) {
+		toast.showError(error, i18n.baseText('projects.settings.save.error.title'));
+	}
+};
+
 const formData = ref<Pick<Project, 'name' | 'description' | 'relations'>>({
 	name: '',
 	description: '',
@@ -556,6 +581,16 @@ onMounted(async () => {
 
 	selectProjectNameIfMatchesDefault();
 	await Promise.all([userRoleProvisioningStore.getProvisioningConfig(), rolesStore.fetchRoles()]);
+
+	if (projectsStore.currentProject) {
+		try {
+			const settings = await projectsStore.getProjectSettings(projectsStore.currentProject.id);
+			langsmithCredentialId.value = settings.langsmithCredentialId;
+			langsmithProject.value = settings.langsmithProject;
+		} catch {
+			// Settings not available, ignore
+		}
+	}
 });
 </script>
 
@@ -633,6 +668,54 @@ onMounted(async () => {
 					/>
 				</fieldset>
 			</template>
+
+			<fieldset v-if="canUpdateProject" data-test-id="project-settings-langsmith">
+				<h3 class="mb-s">
+					<label>{{ i18n.baseText('projects.settings.langsmith.title') }}</label>
+				</h3>
+				<div class="mb-s">
+					<label for="langsmithCredential">{{
+						i18n.baseText('projects.settings.langsmith.credential')
+					}}</label>
+					<N8nSelect
+						id="langsmithCredential"
+						v-model="langsmithCredentialId"
+						:placeholder="i18n.baseText('projects.settings.langsmith.credential.placeholder')"
+						filterable
+						clearable
+						:limit-popper-width="true"
+						:class="$style.projectDescriptionInput"
+						data-test-id="project-settings-langsmith-credential-select"
+					>
+						<N8nOption
+							v-for="cred in langsmithCredentials"
+							:key="cred.id"
+							:label="cred.name"
+							:value="cred.id"
+						/>
+					</N8nSelect>
+				</div>
+				<div class="mb-s">
+					<label for="langsmithProject">{{
+						i18n.baseText('projects.settings.langsmith.project')
+					}}</label>
+					<N8nInput
+						id="langsmithProject"
+						v-model="langsmithProject"
+						:placeholder="i18n.baseText('projects.settings.langsmith.project.placeholder')"
+						type="text"
+						:class="$style.projectDescriptionInput"
+						data-test-id="project-settings-langsmith-project-input"
+					/>
+				</div>
+				<N8nButton
+					variant="solid"
+					size="small"
+					data-test-id="project-settings-langsmith-save-button"
+					@click.stop.prevent="onSaveLangsmithSettings"
+					>{{ i18n.baseText('projects.settings.langsmith.save') }}</N8nButton
+				>
+			</fieldset>
 
 			<ProjectExternalSecrets :class="$style.externalSecrets" />
 
