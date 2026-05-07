@@ -140,13 +140,29 @@ describe('getTracingConfig', () => {
 	});
 
 	describe('OTEL integration', () => {
-		it('should not include OTEL handler when getOtelTraceparent returns undefined', () => {
+		const VALID_TRACEPARENT = '00-abcdef1234567890abcdef1234567890-1234567890abcdef-01';
+
+		function makeMockOtel(traceparent?: string) {
+			return {
+				injectTraceHeaders: (
+					_execId: string,
+					_nodeName: string | undefined,
+					headers: Record<string, string>,
+				) => {
+					if (traceparent) {
+						headers.traceparent = traceparent;
+					}
+				},
+			};
+		}
+
+		it('should not include OTEL handler when no otel context exists', () => {
 			const mockContext = mock<IExecuteFunctions>();
 			mockContext.getWorkflow.mockReturnValue(mockWorkflow);
 			mockContext.getNode.mockReturnValue(mockNode as ReturnType<IExecuteFunctions['getNode']>);
 			mockContext.getExecutionId.mockReturnValue('exec-456');
 			mockContext.getParentCallbackManager.mockReturnValue(undefined);
-			mockContext.getOtelTraceparent.mockReturnValue(undefined);
+			// No additionalData.otel
 
 			const result = getTracingConfig(mockContext);
 
@@ -160,9 +176,7 @@ describe('getTracingConfig', () => {
 			mockContext.getNode.mockReturnValue(mockNode as ReturnType<IExecuteFunctions['getNode']>);
 			mockContext.getExecutionId.mockReturnValue('exec-456');
 			mockContext.getParentCallbackManager.mockReturnValue(mockCallbackManager);
-			mockContext.getOtelTraceparent.mockReturnValue({
-				traceparent: '00-abcdef1234567890abcdef1234567890-1234567890abcdef-01',
-			});
+			(mockContext as any).additionalData = { otel: makeMockOtel(VALID_TRACEPARENT) };
 
 			const result = getTracingConfig(mockContext);
 
@@ -179,9 +193,7 @@ describe('getTracingConfig', () => {
 			mockContext.getNode.mockReturnValue(mockNode as ReturnType<IExecuteFunctions['getNode']>);
 			mockContext.getExecutionId.mockReturnValue('exec-456');
 			mockContext.getParentCallbackManager.mockReturnValue(undefined);
-			mockContext.getOtelTraceparent.mockReturnValue({
-				traceparent: '00-abcdef1234567890abcdef1234567890-1234567890abcdef-01',
-			});
+			(mockContext as any).additionalData = { otel: makeMockOtel(VALID_TRACEPARENT) };
 
 			const result = getTracingConfig(mockContext);
 
@@ -197,9 +209,7 @@ describe('getTracingConfig', () => {
 			mockContext.getNode.mockReturnValue(mockNode as ReturnType<IExecuteFunctions['getNode']>);
 			mockContext.getExecutionId.mockReturnValue('exec-456');
 			mockContext.getParentCallbackManager.mockReturnValue(undefined);
-			mockContext.getOtelTraceparent.mockReturnValue({
-				traceparent: '00-abcdef1234567890abcdef1234567890-1234567890abcdef-01',
-			});
+			(mockContext as any).additionalData = { otel: makeMockOtel(VALID_TRACEPARENT) };
 
 			const originalEnv = process.env.N8N_OTEL_TRACES_INCLUDE_AI_SPANS;
 			process.env.N8N_OTEL_TRACES_INCLUDE_AI_SPANS = 'false';

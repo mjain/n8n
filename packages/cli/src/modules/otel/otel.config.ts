@@ -28,7 +28,4 @@ export class OtelConfig {
 
 	@Env('N8N_OTEL_TRACES_INJECT_OUTBOUND')
 	injectOutbound: boolean = true;
-
-	@Env('N8N_OTEL_TRACES_INCLUDE_AI_SPANS')
-	includeAiSpans: boolean = true;
 }

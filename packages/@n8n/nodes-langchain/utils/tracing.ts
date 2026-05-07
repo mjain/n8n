@@ -93,14 +93,14 @@ export function getTracingConfig(
 			: undefined;
 
 	// Build callbacks array, including OTEL handler when the node has an active OTEL span.
-	// We retrieve the span's traceparent via getOtelTraceparent() (available on IExecuteFunctions)
-	// and reconstruct a remote span context from it. This is necessary because the node execution
-	// doesn't run within the span's async context — spans are managed externally by lifecycle hooks.
+	// Node execution doesn't run within the span's async context (spans are managed externally
+	// by lifecycle hooks), so we use injectTraceHeaders to serialize the node span as a W3C
+	// traceparent, then reconstruct a remote parent context from it.
 	// The N8N_OTEL_TRACES_INCLUDE_AI_SPANS env var (default: true) allows explicit opt-out.
 	let callbacks: Callbacks | undefined = parentRunManager;
 	const includeAiSpans = process.env.N8N_OTEL_TRACES_INCLUDE_AI_SPANS !== 'false';
-	if (includeAiSpans && 'getOtelTraceparent' in context) {
-		const traceparent = (context as IExecuteFunctions).getOtelTraceparent();
+	if (includeAiSpans) {
+		const traceparent = getNodeTraceparent(context);
 		if (traceparent) {
 			const parentCtx = propagation.extract(otelContext.active(), traceparent);
 			const parentSpan = trace.getSpan(parentCtx);
@@ -119,4 +119,32 @@ export function getTracingConfig(
 		},
 		callbacks,
 	};
+}
+
+/**
+ * Extracts the W3C traceparent for the current node's OTEL span by using
+ * the injectTraceHeaders function available on additionalData.otel.
+ * This avoids needing formal interface changes to other packages.
+ */
+function getNodeTraceparent(
+	context: IExecuteFunctions | ISupplyDataFunctions,
+): { traceparent: string; tracestate?: string } | undefined {
+	const additionalData = (context as unknown as { additionalData?: { otel?: unknown } })
+		.additionalData;
+	if (!additionalData?.otel) return undefined;
+
+	const otel = additionalData.otel as {
+		injectTraceHeaders?: (
+			executionId: string,
+			nodeName: string | undefined,
+			headers: Record<string, string>,
+		) => void;
+	};
+	if (!otel.injectTraceHeaders) return undefined;
+
+	const headers: Record<string, string> = {};
+	otel.injectTraceHeaders(context.getExecutionId(), context.getNode().name, headers);
+
+	if (!headers.traceparent) return undefined;
+	return { traceparent: headers.traceparent, tracestate: headers.tracestate };
 }

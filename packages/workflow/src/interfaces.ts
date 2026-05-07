@@ -1152,7 +1152,6 @@ export type IExecuteFunctions = ExecuteFunctions.GetNodeParameterFn &
 			};
 
 		getParentCallbackManager(): CallbackManager | undefined;
-		getOtelTraceparent(): { traceparent: string; tracestate?: string } | undefined;
 
 		startJob<T = unknown, E = unknown>(
 			jobType: string,
@@ -3162,10 +3161,6 @@ export interface IWorkflowExecuteAdditionalData {
 			nodeName: string | undefined,
 			headers: Record<string, string>,
 		) => void;
-		getNodeTraceparent?: (
-			executionId: string,
-			nodeName: string,
-		) => { traceparent: string; tracestate?: string } | undefined;
 	};
 }
 

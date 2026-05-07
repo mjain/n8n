@@ -29,7 +29,6 @@ export class OtelModule implements ModuleInterface {
 
 		return {
 			injectTraceHeaders: tracer.injectTraceHeaders.bind(tracer),
-			getNodeTraceparent: tracer.getNodeTraceparent.bind(tracer),
 		};
 	}
 
